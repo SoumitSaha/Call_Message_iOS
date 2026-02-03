@@ -1,24 +1,32 @@
 PODS:
+  - Socket.IO-Client-Swift (16.1.1):
+    - Starscream (~> 4.0.8)
   - SQLite.swift (0.13.3):
     - SQLite.swift/standard (= 0.13.3)
   - SQLite.swift/standard (0.13.3)
+  - Starscream (4.0.8)
   - SVProgressHUD (2.3.1):
     - SVProgressHUD/Core (= 2.3.1)
   - SVProgressHUD/Core (2.3.1)
 
 DEPENDENCIES:
+  - Socket.IO-Client-Swift (~> 16.0)
   - SQLite.swift (~> 0.13.3)
   - SVProgressHUD
 
 SPEC REPOS:
   trunk:
+    - Socket.IO-Client-Swift
     - SQLite.swift
+    - Starscream
     - SVProgressHUD
 
 SPEC CHECKSUMS:
+  Socket.IO-Client-Swift: 3614bea82ba005df1c2ff01154f4004993e05ad7
   SQLite.swift: 903bfa3bc9ab06345fdfbb578e34f47cfcf417da
+  Starscream: 19b5533ddb925208db698f0ac508a100b884a1b9
   SVProgressHUD: 4837c74bdfe2e51e8821c397825996a8d7de6e22
 
-PODFILE CHECKSUM: 02a04cab103ec3ba31dbb4372087a74e08392577
+PODFILE CHECKSUM: 8f8e6134714d9fa32f21dbbae546ae6ca3f44f78
 
 COCOAPODS: 1.16.2
