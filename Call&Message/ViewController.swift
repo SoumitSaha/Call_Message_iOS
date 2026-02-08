@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class InitialViewController: UIViewController {
 
@@ -26,39 +27,27 @@ class InitialViewController: UIViewController {
     }
 
     private func checkUserStatus() {
+        let firstLaunchKey = "hasLaunchedBefore"
+        if !UserDefaults.standard.bool(forKey: firstLaunchKey) {
+            UserDefaults.standard.set(true, forKey: firstLaunchKey)
+            try? Auth.auth().signOut()
+        }
         // Simulate a delay (like checking stored token or making API call)
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            if self.isUserLoggedIn() {
-                self.goToHomePage()
+            if let user = Auth.auth().currentUser {
+                if user.isEmailVerified {
+                    self.goToHomePage()
+                } else {
+                    self.goToVerificationPage(user.email ?? "")
+                }
             } else {
                 self.goToLoginPage()
             }
         }
     }
 
-    private func isUserLoggedIn() -> Bool {
-        // Replace with actual logic (e.g. check UserDefaults or Keychain)
-        var loggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
-        let lastUser = UserDefaults.standard.string(forKey: "lastUserEmail")
-        
-        if lastUser == nil {
-            return false
-        } else if !loggedIn {
-            let user = DatabaseManager.shared.getUser(byEmail: lastUser!)
-            if user == nil {
-                return false
-            } else {
-                let loginStatus = user!["isLoggedInStatus"]
-                UserDefaults.standard.set(loginStatus as! Bool, forKey: "isLoggedIn")
-                loggedIn = loginStatus as! Bool
-                return loginStatus as! Bool
-            }
-        }
-        
-        return loggedIn
-    }
-
     private func goToHomePage() {
+        WebSocketManager.shared.connect(baseURL: ngrok.shared.URL ?? "")
         let tabBar = HomeTabBarController()
         tabBar.modalPresentationStyle = .fullScreen
         self.present(tabBar, animated: true)
@@ -73,8 +62,19 @@ class InitialViewController: UIViewController {
             LoginSignUpVC.modalTransitionStyle = .crossDissolve
             LoginSignUpVC.modalPresentationStyle = .fullScreen
             self.present(LoginSignUpVC, animated: true, completion: nil)
-        } else {
-            print("⚠️ Could not find LoginSignUpVC with given ID")
+        }
+    }
+    
+    private func goToVerificationPage(_ email: String) {
+        // Get the current storyboard
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+
+        // Instantiate the view controller using its Storyboard ID
+        if let VerificationVC = storyboard.instantiateViewController(withIdentifier: "VerificationVC") as? VerificationVC {
+            VerificationVC.emailId = email
+            VerificationVC.modalTransitionStyle = .crossDissolve
+            VerificationVC.modalPresentationStyle = .fullScreen
+            self.present(VerificationVC, animated: true, completion: nil)
         }
     }
 }

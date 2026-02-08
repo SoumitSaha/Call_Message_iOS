@@ -7,6 +7,7 @@
 
 import UIKit
 import SVProgressHUD
+import FirebaseAuth
 
 class SignUpVC: UIViewController {
 
@@ -28,63 +29,83 @@ class SignUpVC: UIViewController {
     
     @IBAction func signUpPressed(_ sender: Any) {
         guard let emailText = email.text, !emailText.isEmpty,
-                  let passwordText = password.text, !passwordText.isEmpty else {
-                apiResponseMessage.text = "Please enter email and password"
-                apiResponseMessage.textColor = .red
+              let passwordText = password.text, !passwordText.isEmpty else {
+            apiResponseMessage.text = "Please enter email and password"
+            apiResponseMessage.textColor = .red
+            return
+        }
+
+        SVProgressHUD.show(withStatus: "Signing Up...")
+
+        Auth.auth().createUser(withEmail: emailText, password: passwordText) { result, error in
+            if let error = error {
+                SVProgressHUD.dismiss()
+                self.updateAlert(
+                    message: "Signup failed: ",
+                    color: .red,
+                    error: error.localizedDescription
+                )
                 return
             }
-            
-            SVProgressHUD.show(withStatus: "Signing Up...")
-        
-            // 1. Build request
-            guard let url = URL(string: "\(ngrok.shared.URL ?? "")/register") else { return }
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            
-            let body: [String: Any] = [
-                "email": emailText,
-                "password": passwordText
-            ]
-            
-            request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                if error != nil {
-                    SVProgressHUD.showError(withStatus: "Network Error")
+            guard let user = result?.user else {
+                SVProgressHUD.dismiss()
+                self.updateAlert(
+                    message: "Signup failed: ",
+                    color: .red,
+                    error: "No user returned"
+                )
+                return
+            }
+
+            // Send verification email
+            user.sendEmailVerification { error in
+                if let error = error {
+                    SVProgressHUD.dismiss()
+                    self.updateAlert(
+                        message: "Failed to send verification email: ",
+                        color: .red,
+                        error: error.localizedDescription
+                    )
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    SVProgressHUD.showError(withStatus: "Invalid response")
-                    return
-                }
+                // Fetch ID token (you'll send this to backend later)
+                user.getIDTokenForcingRefresh(true) { token, error in
+                    SVProgressHUD.dismiss()
 
-                switch httpResponse.statusCode {
-                case 200:
-                    SVProgressHUD.showSuccess(withStatus: "Register successful")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    if let error = error {
+                        self.updateAlert(
+                            message: "Failed to get ID token: ",
+                            color: .red,
+                            error: error.localizedDescription
+                        )
+                        return
+                    }
+
+                    // SUCCESS
+                    print("Firebase ID Token:")
+                    print(token ?? "nil")
+
+                    // Optional: save email for convenience
+                    UserDefaults.standard.set(emailText, forKey: "lastUserEmail")
+
+                    // Go to VerificationVC
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                        if let verificationVC = storyboard.instantiateViewController(
+                            withIdentifier: "VerificationVC"
+                        ) as? VerificationVC {
 
-                        // Instantiate the view controller using its Storyboard ID
-                        if let verificationVC = storyboard.instantiateViewController(withIdentifier: "VerificationVC") as? VerificationVC {
                             verificationVC.emailId = emailText
                             verificationVC.modalTransitionStyle = .crossDissolve
                             verificationVC.modalPresentationStyle = .fullScreen
-                                self.present(verificationVC, animated: true, completion: nil)
-                        } else {
-                            print("⚠️ Could not find VerificationVC with given ID")
+                            self.present(verificationVC, animated: true)
                         }
                     }
-                case 400:
-                    SVProgressHUD.showError(withStatus: "Email Already Exists")
-                case 500:
-                    SVProgressHUD.showError(withStatus: "Code Send Failed")
-                default:
-                    SVProgressHUD.showError(withStatus: "Unexpected status code")
                 }
             }
-
-            task.resume()
+        }
     }
+
 }

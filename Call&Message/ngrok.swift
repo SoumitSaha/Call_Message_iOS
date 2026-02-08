@@ -12,6 +12,6 @@ class ngrok {
     public let URL: String?
     
     private init() {
-        URL = "https://e103b606d20b.ngrok-free.app"
+        URL = "https://89cd-2607-fa49-4b46-4700-4544-5bd3-4708-c78f.ngrok-free.app"
     }
 }

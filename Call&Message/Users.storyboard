@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--UsersVC-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="UsersVC" id="Y6W-OH-hqX" customClass="UsersVC" customModule="Call_Message" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Md7-ar-kYU">
+                                <rect key="frame" x="0.0" y="118" width="393" height="666"/>
+                                <subviews>
+                                    <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="LR5-P1-Voh">
+                                        <rect key="frame" x="39.333333333333343" y="0.0" width="314.33333333333326" height="31"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="30" id="JjT-f8-WBt"/>
+                                        </constraints>
+                                        <segments>
+                                            <segment title="Recommended"/>
+                                            <segment title="Friends"/>
+                                        </segments>
+                                        <color key="selectedSegmentTintColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <connections>
+                                            <action selector="segmentChanged:" destination="Y6W-OH-hqX" eventType="valueChanged" id="mfZ-Kh-zi6"/>
+                                        </connections>
+                                    </segmentedControl>
+                                    <searchBar contentMode="redraw" placeholder="search by email or name" translatesAutoresizingMaskIntoConstraints="NO" id="m6C-e8-b3P">
+                                        <rect key="frame" x="0.0" y="40" width="393" height="30"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="30" id="dYx-qR-DuW"/>
+                                        </constraints>
+                                        <textInputTraits key="textInputTraits"/>
+                                        <scopeButtonTitles>
+                                            <string>Title</string>
+                                            <string>Title</string>
+                                        </scopeButtonTitles>
+                                        <connections>
+                                            <outlet property="delegate" destination="Y6W-OH-hqX" id="nhP-Mv-MBE"/>
+                                        </connections>
+                                    </searchBar>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="3SS-0G-l8b">
+                                        <rect key="frame" x="0.0" y="80" width="393" height="586"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <color key="sectionIndexBackgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                    </tableView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstItem="3SS-0G-l8b" firstAttribute="leading" secondItem="Md7-ar-kYU" secondAttribute="leading" id="0uF-fK-pRw"/>
+                                    <constraint firstAttribute="trailing" secondItem="3SS-0G-l8b" secondAttribute="trailing" id="6QB-u0-PUD"/>
+                                    <constraint firstItem="m6C-e8-b3P" firstAttribute="leading" secondItem="Md7-ar-kYU" secondAttribute="leading" id="8iS-N7-qfJ"/>
+                                    <constraint firstAttribute="trailing" secondItem="m6C-e8-b3P" secondAttribute="trailing" id="AYa-Mh-yFm"/>
+                                    <constraint firstItem="LR5-P1-Voh" firstAttribute="width" secondItem="m6C-e8-b3P" secondAttribute="width" multiplier="0.8" id="I5x-OK-Tzx"/>
+                                    <constraint firstItem="LR5-P1-Voh" firstAttribute="top" secondItem="Md7-ar-kYU" secondAttribute="top" id="R1u-ay-YQC"/>
+                                    <constraint firstItem="LR5-P1-Voh" firstAttribute="centerX" secondItem="m6C-e8-b3P" secondAttribute="centerX" id="WhJ-Fd-5VL"/>
+                                    <constraint firstItem="3SS-0G-l8b" firstAttribute="top" secondItem="m6C-e8-b3P" secondAttribute="bottom" constant="10" id="aX2-Kx-c8x"/>
+                                    <constraint firstAttribute="bottom" secondItem="3SS-0G-l8b" secondAttribute="bottom" id="qOk-tD-Z7B"/>
+                                    <constraint firstItem="m6C-e8-b3P" firstAttribute="top" secondItem="LR5-P1-Voh" secondAttribute="bottom" constant="10" id="xtX-IR-eCV"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="Md7-ar-kYU" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" id="H33-Hx-hBo"/>
+                            <constraint firstItem="Md7-ar-kYU" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="MHg-Lq-F8o"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="Md7-ar-kYU" secondAttribute="bottom" id="seJ-y5-eXU"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="Md7-ar-kYU" secondAttribute="trailing" id="v7w-2i-4Hn"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="searchBar" destination="m6C-e8-b3P" id="gfx-J3-p2K"/>
+                        <outlet property="segmentedControl" destination="LR5-P1-Voh" id="5Yo-wg-h6c"/>
+                        <outlet property="tableView" destination="3SS-0G-l8b" id="jUM-0b-JnY"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="139.69465648854961" y="91.549295774647888"/>
+        </scene>
+    </scenes>
+</document>

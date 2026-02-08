@@ -7,6 +7,12 @@
 
 import Foundation
 import SocketIO
+import FirebaseAuth
+
+extension Notification.Name {
+    static let socketConnected = Notification.Name("socketConnected")
+    static let socketAuthError = Notification.Name("socketAuthError")
+}
 
 final class WebSocketManager {
     static let shared = WebSocketManager()
@@ -19,35 +25,75 @@ final class WebSocketManager {
     // MARK: - State
     private var heartbeatTimer: Timer?
     private var userEmail: String = ""
+    
+    private var isAuthed = false
 
     // MARK: - Public API
-    func connect(email: String, baseURL: String) {
-        userEmail = email
+    func connect(baseURL: String) {
+        if socket?.status == .connected || socket?.status == .connecting {
+            print("ℹ️ Socket already connected/connecting. Skip connect().")
+            return
+        }
+        // 1) Ensure we have a logged-in Firebase user
+        guard let user = Auth.auth().currentUser else {
+            print("❌ No Firebase user. Please login first.")
+            return
+        }
 
-        // Reuse existing connection if already configured
-        if manager == nil {
-            guard let url = URL(string: baseURL) else {
-                print("❌ Invalid Socket base URL:", baseURL)
+        // 2) Fetch a fresh ID token (recommended)
+        user.getIDTokenForcingRefresh(true) { [weak self] token, error in
+            guard let self else { return }
+
+            if let error = error {
+                print("❌ Failed to get Firebase ID token:", error.localizedDescription)
+                return
+            }
+            guard let token = token, !token.isEmpty else {
+                print("❌ Empty Firebase ID token")
                 return
             }
 
-            let config: SocketIOClientConfiguration = [
-                .log(true),
-                .compress,
-                .reconnects(true), // auto-reconnect
-                .reconnectAttempts(-1), // infinite reconnect attempts
-                .reconnectWait(2), // 2 seconds wait in reach reconnect attempt
-                // Force websockets as I don’t want polling:
-                .forceWebsockets(true),
-                .connectParams(["email": email])
-            ]
+            // 3) Build / reuse SocketManager
+            if self.manager == nil {
+                guard let url = URL(string: baseURL) else {
+                    print("❌ Invalid Socket base URL:", baseURL)
+                    return
+                }
 
-            manager = SocketManager(socketURL: url, config: config)
-            socket = manager?.defaultSocket
-            registerHandlers()
+                // IMPORTANT:
+                // - baseURL should be https://xxxx.ngrok-free.app
+                // - forceWebsockets(true) makes it use wss:// automatically
+                let config: SocketIOClientConfiguration = [
+                    .log(true),
+                    .compress,
+                    .reconnects(true),
+                    .reconnectAttempts(-1),
+                    .reconnectWait(2),
+                    .forceWebsockets(true),
+                    .connectParams(["token": token]),
+
+                    // Optional: if you ever use self-signed certs (ngrok doesn't need this)
+                    // .secure(true)
+                ]
+
+                self.manager = SocketManager(socketURL: url, config: config)
+                self.socket = self.manager?.defaultSocket
+                self.registerHandlers()
+            } else {
+                // Manager already exists; update token before connecting
+                // Socket.IO-Client-Swift doesn’t let you mutate connectParams directly,
+                // so safest is to rebuild manager when token changes.
+                // For a simple portfolio app, rebuild when reconnecting:
+                self.manager?.disconnect()
+                self.manager = nil
+                self.socket = nil
+                self.connect(baseURL: baseURL)
+                return
+            }
+
+            // 4) Connect
+            self.socket?.connect()
         }
-
-        socket?.connect()
     }
 
     func disconnect() {
@@ -57,8 +103,7 @@ final class WebSocketManager {
 
     // MARK: - Emitters
     func sendHeartbeat() {
-        guard socket?.status == .connected else { return }
-        guard !userEmail.isEmpty else { return }
+        guard socket?.status == .connected, isAuthed else { return }
 
         socket?.emit("heartbeat")
         print("❤️ Sent heartbeat")
@@ -75,15 +120,31 @@ final class WebSocketManager {
         guard let socket = socket else { return }
 
         socket.on(clientEvent: .connect) { [weak self] _, _ in
-            print("✅ Socket connected")
-            self?.startHeartbeatTimer()
-            // Optional: immediately send first heartbeat
-            self?.sendHeartbeat()
+            print("✅ Socket handshake connected (not authed yet)")
+            self?.isAuthed = false
         }
 
+        socket.on("auth_error") { data, _ in
+            print("❌ auth_error:", data)
+            NotificationCenter.default.post(name: .socketAuthError, object: data)
+        }
+        
+        socket.onAny { event in
+            print("📡 onAny event:", event.event, "items:", event.items ?? [])
+        }
+        
         socket.on("server_message") { data, _ in
             // Example server ACKs or logs
             print("📩 server_message:", data)
+            guard let dict = data.first as? [String: Any], let msg = dict["message"] as? String
+            else { return }
+
+            if msg == "Connected" {
+                self.isAuthed = true
+                NotificationCenter.default.post(name: .socketConnected, object: nil)
+                self.startHeartbeatTimer()
+                self.sendHeartbeat()
+            }
         }
 
         // If you relay signaling/messages from server:
